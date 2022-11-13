@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="https://img-1310166437.cos.ap-chengdu.myqcloud.com/img/202210151045573.png">
+    <title>可视化</title>
+    <script src="/static/jquery/jquery.js"></script>
+    <script src="/static/bootstrap/js/bootstrap.js"></script>
+    <script src="/static/echart/echarts.js"></script>
+    <link href="/static/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css">
+    <style>
+
+
+
+
+        h1{
+            width: 350px;
+            font-family: "等线 Light";
+            border-bottom:2px black solid ;
+            margin-left: 40px;
+        }
+        p {
+            font-size:20px ;
+            font-family: 等线;
+            margin-left: 40px;
+        }
+        .jumbotron {
+            background-image: url("https://img-1310166437.cos.ap-chengdu.myqcloud.com/img/629528.jpg");
+        }
+        .panel-body {
+            background-color: whitesmoke;
+        }
+        #main{
+            width: 60%;
+            height: 600px;
+            display: inline-block;
+        }
+        #main2 {
+            width: 40%;
+            height: 600px;
+            display: inline-block;
+            top: 80px;
+            float: right;
+        }
+        .input-group {
+            top: -250px;
+            width: 300px;
+            float: right;
+            margin-right: 20px;
+        }
+        .row {
+            width: 100%;
+        }
+        #select1 {
+            margin-left: 10px;
+            background-color: lightskyblue;
+            width: 100px;
+            height: 40px;
+            border-radius: 10px;
+        }
+        #city {
+            color: #2aabd2;
+        }
+        #city1 {
+            color: #2aabd2;
+        }
+    </style>
+</head>
+<body>
+    <div class="jumbotron">
+      <h1>房源可视化</h1>
+      <p>通过爬虫爬取数据可视化展示房源数据</p>
+      <p>使用echarts，bootstrap</p>
+      <p>
+          <a class="btn btn-primary btn-lg"  id="update" role="button">更新房源数据</a>
+          <select name="select1" id="select1">
+              <option value="https://cq.newhouse.fang.com">重庆</option>
+              <option value="https://cd.newhouse.fang.com">成都</option>
+              <option value="https://newhouse.fang.com">北京</option>
+              <option value="https://sz.newhouse.fang.com">深圳</option>
+              <option value="https://sh.newhouse.fang.com">上海</option>
+              <option value="https://gz.newhouse.fang.com">广州</option>
+          </select>
+      </p>
+
+    </div>
+    <div class="panel panel-default">
+      <div class="panel-body" >
+        图表(<span id="city">{{ citys }}</span>)
+      </div>
+    </div>
+    <div class="row">
+
+
+                <div id="main">
+
+                </div>
+
+
+                <div id="main2">
+
+                </div>
+            </div>
+    </div>
+    <div class="panel panel-default">
+      <div class="panel-body" >
+        表单(<span id="city1">{{ citys }}</span>)
+      </div>
+    </div>
+    <div id="div1">
+
+    </div>
+    <script>
+        const url = '/api/getareadata/';
+        const url_2 = '/api/getall/';
+        const url_3 = '/api/update/';
+        const url_4 ='/api/getcity';
+
+        let myChart1 = echarts.init(document.getElementById('main'));
+        let maChart2 = echarts.init(document.getElementById('main2'));
+
+
+
+        function getCategoryPolice_yuan(url){
+        $.get(url).done(function(data) {
+          myChart1.setOption({
+               xAxis: {
+                type: 'category',
+                data: data['areas'],
+                axisLabel: {
+                    rotate: 40
+                    }
+                },
+                yAxis: {
+                type: 'value'
+                },
+                title: {
+                    text: '房源数据',
+                    left: 'left'
+                },
+                tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                }
+                },
+                series: [
+                {
+                  data: data['areasnumber'],
+                  type: 'bar',
+                  showBackground: true,
+                  backgroundStyle: {
+                    color: 'rgba(180, 180, 180, 0.2)'
+                  }
+                }
+                ],})
+            maChart2.setOption({
+                title: {
+                    text: '出售情况',
+                    left: 'center'
+                },
+              tooltip: {
+                trigger: 'item'
+              },
+              legend: {
+                orient: 'vertical',
+                left: 'left'
+              },
+              series: [
+                {
+                  name: 'Access From',
+                  type: 'pie',
+                  radius: '50%',
+                  data: data['sell'],
+                  emphasis: {
+                    itemStyle: {
+                      shadowBlur: 10,
+                      shadowOffsetX: 0,
+                      shadowColor: 'rgba(0, 0, 0, 0.5)'
+                    }
+                  }
+                }
+              ]
+            })
+
+         window.onresize = function(){
+         myChart1.resize();
+        }
+        })}
+
+        function  getCategoryPolice_grade(url){
+            $.ajax({
+                method: 'GET',
+                url: url,
+                success: function (res) {
+                    var rows = [];
+                    console.log(res)
+                    $.each(res, function (i, item) {
+                        var str = '<tr><th scope="row">' + (i + 1) + '</th><td>' + '<a href="'+item.url+'">'+item.name +'</a></td><td>' + '<a href="'+item.addressurl+'">'+item.address +'</a></td><td>'
+                            + item.area + '</td><td>' + item.price + '</td><td>' + item.size + '</td><td>' + item.issell + '</td><td>' + item.phone + '</td></tr>';
+                        rows.push(str);
+                    });
+                    $('#div1').empty().append('<table class="table table-success table-striped table-hover"><thead><tr><th scope="col">序号</th>'
+                        + '<th scope="col">名称</th><th scope="col">地址</th><th scope="col">区域</th><th scope="col">价格</th><th scope="col">大小</th><th scope="col">出售情况</th><th scope="col">联系电话</th></tr></thead><tbody>'
+                        + rows.join('') + '</tbody></table>');
+                }
+            });
+        }
+
+        getCategoryPolice_yuan(url);
+        getCategoryPolice_grade(url_2);
+
+        let timer_1 = '';
+        // 更新数据的点击事件
+        $("#update").on("click",function (){
+            // 开启一个定时器
+            let area = $("#select1").val();
+            let city = getTextFromSelect('select1')
+            function getTextFromSelect(selectId) {
+                var selectObj = document.getElementById(selectId);
+                //获取选中索引
+                var index = selectObj.selectedIndex;
+                var optionText = selectObj.options[index].text;
+                console.log("select 标签选中的text-->"+optionText);
+                return optionText;
+            }
+            $("#city").text(city);
+            $("#city1").text(city);
+            timer_1 = setInterval(
+                function() {
+					getCategoryPolice_yuan(url);
+                    getCategoryPolice_grade(url_2);
+				}, 1000
+            )
+            $.get(url_3+'?area='+area+'&city='+city).done(function(data) {
+                console.log("88")
+                if (data['code'] === 200){
+                    alert("获取数据成功")
+                    clearInterval(timer_1);
+                }if (data['code'] === 300){
+                    alert("获取数据失败");
+                    clearInterval(timer_1);
+                }
+            })
+        })
+
+    </script>
+</body>
+</html>
